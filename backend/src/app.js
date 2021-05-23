@@ -5,6 +5,8 @@ const public = path.join (__dirname, '../public')
 const db = require('./db')
 const bcrypt = require('bcryptjs')
 const User = require('../model/user')
+const jwt = require('jsonwebtoken')
+const JWT_SECRET = 'idontreallycare123456'
 
 app.set('views', path.join (__dirname, '../views'));
 app.set('view engine', 'pug')
@@ -14,6 +16,29 @@ app.use(express.static(public))
 
 app.get('/',(request,response)=>{
     response.render('index')
+})
+
+app.get('/login',(request,response)=>{
+    response.render('login')
+})
+
+app.post('/userLogin', async (request,response)=>{
+    const {email, password} = request.body
+    const user = await User.findOne({email}).lean()
+
+    if(!user){
+        return response.json({status:'error', error: 'Invalid email or password'})
+    }
+
+    if(await bcrypt.compare(password,user.password)){
+        const token = jwt.sign({
+            id:user._id,
+            email:user.email
+        }, JWT_SECRET)
+        return response.json({status:'ok', data: token})
+    }
+
+    return response.json({status:'error',error:'Invalid email or password'})
 })
 
 app.post('/register', async (request,response)=>{
