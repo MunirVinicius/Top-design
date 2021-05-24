@@ -16,5 +16,11 @@ async function loginUser(event){
             email,
             password
         })
-    }).then((res)=>res.json())
+    }).then(async (response)=>{
+        const res = await response.json()
+        if(!res.data){
+            return console.log(res.error)
+        }
+        return window.location.href = 'http://localhost:3000/admin'
+    })
 }

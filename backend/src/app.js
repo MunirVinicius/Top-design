@@ -22,23 +22,28 @@ app.get('/login',(request,response)=>{
     response.render('login')
 })
 
+app.get('/admin',(request, response, next)=>{
+    const auth = request.header
+    response.render('admin')
+})
+
 app.post('/userLogin', async (request,response)=>{
     const {email, password} = request.body
     const user = await User.findOne({email}).lean()
 
     if(!user){
-        return response.json({status:'error', error: 'Invalid email or password'})
+        return response.json({error: 'Invalid email or password'})
     }
 
     if(await bcrypt.compare(password,user.password)){
         const token = jwt.sign({
             id:user._id,
             email:user.email
-        }, JWT_SECRET)
-        return response.json({status:'ok', data: token})
+        }, JWT_SECRET,{expiresIn:86400})
+        return response.json({data: token})
     }
 
-    return response.json({status:'error',error:'Invalid email or password'})
+    return response.json({error: 'Invalid email or password'})
 })
 
 app.post('/register', async (request,response)=>{
