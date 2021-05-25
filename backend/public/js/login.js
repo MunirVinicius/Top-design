@@ -21,6 +21,14 @@ async function loginUser(event){
         if(!res.data){
             return console.log(res.error)
         }
-        return window.location.href = 'http://localhost:3000/admin'
+        const login = await fetch ('/admin',{
+            method: 'GET',
+            headers: {
+                'Content-Type':'application/json',
+                'authorization': `${res.data}`
+            },
+        }).then((response)=>{
+            // return window.location.href = 'http://localhost:3000/admin'
+        })
     })
 }

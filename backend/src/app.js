@@ -5,14 +5,32 @@ const public = path.join (__dirname, '../public')
 const db = require('./db')
 const bcrypt = require('bcryptjs')
 const User = require('../model/user')
-const jwt = require('jsonwebtoken')
-const JWT_SECRET = 'idontreallycare123456'
+const session = require('express-session')
+const MongoStore = require('connect-mongo');
+const dbopt = {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}
 
 app.set('views', path.join (__dirname, '../views'));
 app.set('view engine', 'pug')
 
 app.use(express.json())
+app.use(express.urlencoded({extended:false}))
 app.use(express.static(public))
+
+app.use(session({
+    secret: 'Secret',
+    resave: false,
+    saveUninitialized:true,
+    store: MongoStore.create({
+        mongoUrl: 'mongodb://localhost:27017/topdesign',
+        mongoOptions: dbopt
+    }),
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24
+    }
+  }));
 
 app.get('/',(request,response)=>{
     response.render('index')
@@ -22,8 +40,8 @@ app.get('/login',(request,response)=>{
     response.render('login')
 })
 
-app.get('/admin',(request, response, next)=>{
-    const auth = request.header
+
+app.get('/admin',(request, response)=>{
     response.render('admin')
 })
 
@@ -36,11 +54,6 @@ app.post('/userLogin', async (request,response)=>{
     }
 
     if(await bcrypt.compare(password,user.password)){
-        const token = jwt.sign({
-            id:user._id,
-            email:user.email
-        }, JWT_SECRET,{expiresIn:86400})
-        return response.json({data: token})
     }
 
     return response.json({error: 'Invalid email or password'})
